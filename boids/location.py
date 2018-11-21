@@ -13,6 +13,7 @@ class Location:
 
         columns_created = ['x', 'vx', 'y', 'vy']
         builder.population.initializes_simulants(self.on_create_simulants, columns_created)
+        builder.event.register_listener('time_step', self.on_time_step)
         self.population_view = builder.population.get_view(columns_created)
 
     def on_create_simulants(self, pop_data):
@@ -25,3 +26,9 @@ class Location:
             'vy': -0.5 + np.random.random(count),
         }, index= pop_data.index)
         self.population_view.update(new_population)
+
+    def on_time_step(self, event):
+        pop = self.population_view.get(event.index)
+        pop.x += pop.vx
+        pop.y += pop.vy
+        self.population_view.update(pop)
