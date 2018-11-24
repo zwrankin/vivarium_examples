@@ -1,6 +1,7 @@
+import numpy as np
 import pandas as pd
 from scipy import spatial
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.cluster import KMeans
 
 class Flock:
 
@@ -45,35 +46,50 @@ class Flock:
 class FlockKMeans:
     configuration_defaults = {
         'neighbors': {
-            'n': 5
+            'n_neighbors': 8
         }
     }
 
     def setup(self, builder):
         self.n_neighbors = builder.configuration.neighbors.n_neighbors
-        self.knn = KNeighborsClassifier(self.n_neighbors, weights='distance')
+        self.kmeans = KMeans(self.n_neighbors, random_state=0)
         columns_created = ['cluster']
         builder.population.initializes_simulants(self.on_initialize_simulants, columns_created)
         builder.event.register_listener('time_step', self.on_time_step, priority=0)
-        self.population_view = builder.population.get_view(['x', 'y', 'vx', 'vy'])
+        self.population_view = builder.population.get_view(['x', 'y', 'vx', 'vy'] + columns_created)
 
     def on_initialize_simulants(self, pop_data):
-        pop = self.population_view.get(event.index)
-        pop['cluster'] = self.knn.fit_transform(pop[['x', 'y']])
+        # Can't seem to use other columns during initialization
+        #         pop = self.population_view.get(pop_data.index)
+        #         self.kmeans.fit(pop[['x', 'y']])
+        #         pop['cluster'] = self.kmeans.labels_
+        pop = pd.DataFrame({
+            'cluster': [1] * len(pop_data.index),
+        })
         self.population_view.update(pop)
 
     def on_time_step(self, event):
         pop = self.population_view.get(event.index)
-
-        pop['cluster'] = self.knn.fit_transform(pop[['x', 'y']])
+        self.kmeans.fit(pop[['x', 'y']])
+        pop['cluster'] = self.kmeans.labels_
+        pop.cluster = pop.cluster.astype('int64')  # picky picky Vivarium
         clusters = pop.groupby('cluster')[['x', 'y', 'vx', 'vy']].mean()
 
         # RULE 2: velocity toward center of mass
-        pop['vx'] = pop.apply(lambda row: 0.5 * row.vx + 0.5 * (row.x - clusters.iloc[row.cluster].x))
-        pop['vy'] = pop.apply(lambda row: 0.5 * row.vy + 0.5 * (row.y - clusters.iloc[row.cluster].y))
+        pop['vx'] = pop.apply(lambda row: 1 * row.vx + 0.05 * (clusters.iloc[int(row.cluster)].x - row.x),
+                              axis=1)
+        pop['vy'] = pop.apply(lambda row: 1 * row.vy + 0.05 * (clusters.iloc[int(row.cluster)].y - row.y),
+                              axis=1)
 
         # RULE 1: Match velocity
-        pop['vx'] = pop.apply(lambda row: 0.8 * row.vx + 0.2 * clusters.iloc[row.cluster].vx)
-        pop['vy'] = pop.apply(lambda row: 0.8 * row.vy + 0.2 * clusters.iloc[row.cluster].vy)
+        pop['vx'] = pop.apply(lambda row: 1 * row.vx + 0.1 * clusters.iloc[int(row.cluster)].vx,
+                              axis=1)
+        pop['vy'] = pop.apply(lambda row: 1 * row.vy + 0.1 * clusters.iloc[int(row.cluster)].vy,
+                              axis=1)
+
+        # RULE 3: give cluster some acceleration (for now, same for x and y)
+        clusters['a'] = 5 * np.random.randn(self.n_neighbors)
+        pop['vx'] = pop.apply(lambda row: row.vx + clusters.iloc[int(row.cluster)].a, axis=1)
+        pop['vy'] = pop.apply(lambda row: row.vy + clusters.iloc[int(row.cluster)].a, axis=1)
 
         self.population_view.update(pop)
