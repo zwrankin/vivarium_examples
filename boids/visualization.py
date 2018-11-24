@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib import animation
 import os
 import shutil
 import imageio
@@ -88,7 +89,48 @@ class SaveFrames:
                 image = imageio.imread(f'{self.path}/{i}', format='png')
                 writer.append_data(image)
 
-# with MovieWriter('flock.gif') as mw:
-#     components = [Population(), Location(), Flock(), mw]
-#     sim = setup_simulation(components)
-#     sim.take_steps(20)
+
+class MovieWriter:
+    """
+    Saves a gif of simulation
+    NOTE - doesn't seem to work on Windows
+    Usage:
+    with MovieWriter('flock.gif') as mw:
+        components = [Population(), Location(), Flock(), mw]
+        sim = setup_simulation(components)
+        sim.take_steps(20)
+    """
+
+    def __init__(self, fname):
+        self.moviewriter = animation.ImageMagickWriter(fps=2)
+        self.fname = fname
+
+    def __enter__(self):
+        fig = plt.figure()
+        self.moviewriter.setup(fig, self.fname, dpi=100)
+        return self
+
+    def setup(self, builder):
+        self.width = builder.configuration.location.width
+        self.height = builder.configuration.location.height
+        builder.event.register_listener('time_step', self.on_time_step)
+        self.population_view = builder.population.get_view(['x', 'y', 'vx', 'vy', 'color'])
+
+    def on_time_step(self, event):
+        pop = self.population_view.get(event.index)
+
+        plt.clf()
+        self.plot_boids(pop)
+
+        self.moviewriter.grab_frame()
+
+    def plot_boids(self, pop):
+        #         plt.figure(figsize=[12, 12])
+        plt.scatter(pop.x, pop.y, color=pop.color)
+        plt.quiver(pop.x, pop.y, pop.vx, pop.vy, color=pop.color, width=0.002)
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.axis([0, self.width, 0, self.height])
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.moviewriter.finish()
