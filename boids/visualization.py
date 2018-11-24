@@ -45,7 +45,12 @@ class SaveFrames:
         builder.event.register_listener('time_step',
                                         self.on_time_step)  # priority??? Before or after they actually move?
         builder.event.register_listener('simulation_end', self.save_movie)
-        self.population_view = builder.population.get_view(['x', 'y', 'vx', 'vy', 'cluster', 'infected'])
+        cols = ['x', 'y', 'vx', 'vy']
+        if self.plot_type == 'cluster':
+            cols.append('cluster')
+        elif self.plot_type == 'infection':
+            cols.append('infected')
+        self.population_view = builder.population.get_view(cols)
 
     def on_time_step(self, event):
         pop = self.population_view.get(event.index)
