@@ -13,8 +13,10 @@ components:
                 - FlockKMeans()
         vivarium_examples.boids.infection:
                 - Infection()
-        vivarium_examples.boids.visualization:
-                - SaveFrames('test4')
+#        vivarium_examples.boids.visualization:
+#                - SaveFrames('test4')
+        vivarium_examples.boids.observer:
+                - InfectionObserver()
 
 configuration:
         population:
