@@ -6,13 +6,13 @@ from sklearn.cluster import KMeans
 class Flock:
 
     configuration_defaults = {
-        'neighbors': {
+        'flock': {
             'radius': 10
         }
     }
 
     def setup(self, builder):
-        self.radius = builder.configuration.neighbors.radius
+        self.radius = builder.configuration.flock.radius
 
         builder.event.register_listener('time_step', self.on_time_step, priority=0)
         self.population_view = builder.population.get_view(['x', 'y', 'vx', 'vy'])
@@ -45,14 +45,14 @@ class Flock:
 
 class FlockKMeans:
     configuration_defaults = {
-        'neighbors': {
-            'n_neighbors': 8
+        'flock': {
+            'n_clusters': 8
         }
     }
 
     def setup(self, builder):
-        self.n_neighbors = builder.configuration.neighbors.n_neighbors
-        self.kmeans = KMeans(self.n_neighbors, random_state=0)
+        self.n_clusters = builder.configuration.flock.n_clusters
+        self.kmeans = KMeans(self.n_clusters, random_state=0)
         columns_created = ['cluster']
         builder.population.initializes_simulants(self.on_initialize_simulants, columns_created)
         builder.event.register_listener('time_step', self.on_time_step, priority=0)
@@ -88,7 +88,7 @@ class FlockKMeans:
                               axis=1)
 
         # RULE 3: give cluster some acceleration (for now, same for x and y)
-        clusters['a'] = 5 * np.random.randn(self.n_neighbors)
+        clusters['a'] = 5 * np.random.randn(self.n_clusters)
         pop['vx'] = pop.apply(lambda row: row.vx + clusters.iloc[int(row.cluster)].a, axis=1)
         pop['vy'] = pop.apply(lambda row: row.vy + clusters.iloc[int(row.cluster)].a, axis=1)
 
