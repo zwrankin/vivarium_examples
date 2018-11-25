@@ -1,0 +1,6 @@
+input_draw_count: 10
+
+#branches:
+#  - infection:
+#       n_start: [1, 5, 10]
+#
