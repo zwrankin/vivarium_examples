@@ -6,7 +6,7 @@ class Population:
 
     configuration_defaults = {
         'population': {
-            'population_size': 100,
+            # 'population_size': 100,  # there's a conflict with vivarium.framework.population
             'colors': ['red', 'blue'],
         }
     }
