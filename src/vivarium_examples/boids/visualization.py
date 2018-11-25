@@ -35,8 +35,9 @@ class SaveFrames:
         self.fname = fname
         self.plot_type = plot_type
         self.step = 1
-        self.path = f'images/{self.fname}'
+        self.path = f'output/{self.fname}'
         shutil.rmtree(self.path, ignore_errors=True)
+        os.mkdir('output')
         os.mkdir(self.path)
 
     def setup(self, builder):
