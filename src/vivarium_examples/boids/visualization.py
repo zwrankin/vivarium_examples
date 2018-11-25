@@ -78,7 +78,9 @@ class SaveFrames:
         plt.axis([0, self.width, 0, self.height])
 
     def save_movie(self, event):
-        # FIXME - this doesn't work - here's a hack to turn frames into gif after sim
+        # NOTE - 'simulation_end' event doesn't seem to fire in interactive mode
+        # Here's a hack to turn frames into gif after sim
+
         # import imageio
         # image_directory = 'images/test'
         # images = [i for i in os.listdir(image_directory) if 'png' in i]
@@ -88,9 +90,8 @@ class SaveFrames:
         #         image = imageio.imread(f'{image_directory}/{i}', format='png')
         #         writer.append_data(image)
 
-        images = [i for i in os.listdir(self.path) if 'png' in i]
-        import pdb;
-        pdb.set_trace()
+        images = [f'step_{i}.png' for i in range(1, self.step)]  # Note that self.step is 1 greater than number of steps
+
         with imageio.get_writer(f'{self.path}/movie.gif', mode='I', fps=2) as writer:
             for i in images:
                 image = imageio.imread(f'{self.path}/{i}', format='png')
@@ -99,18 +100,18 @@ class SaveFrames:
 
 class MovieWriter:
     """
+    DOESN'T WORK!
     Saves a gif of simulation
-    NOTE - doesn't seem to work on Windows
-    Usage:
-    with MovieWriter('flock.gif') as mw:
-        components = [Population(), Location(), Flock(), mw]
-        sim = setup_simulation(components)
-        sim.take_steps(20)
+    Something about animation's subprocess backend doesn't seem to work on Windows
+    Getting a different bug on cluster, haven't debugged yet
     """
 
-    def __init__(self, fname):
+    def __init__(self, fname, plot_type='infection'):
         self.moviewriter = animation.ImageMagickWriter(fps=2)
-        self.fname = fname
+        self.fname = f'output/{fname}'
+        self.plot_type = plot_type
+        if not os.path.exists('output'):
+            os.mkdir('output')
 
     def __enter__(self):
         fig = plt.figure()
@@ -121,10 +122,21 @@ class MovieWriter:
         self.width = builder.configuration.location.width
         self.height = builder.configuration.location.height
         builder.event.register_listener('time_step', self.on_time_step)
-        self.population_view = builder.population.get_view(['x', 'y', 'vx', 'vy', 'color'])
+        cols = ['x', 'y', 'vx', 'vy']
+        if self.plot_type == 'cluster':
+            cols.append('cluster')
+        elif self.plot_type == 'infection':
+            cols.append('infected')
+        self.population_view = builder.population.get_view(cols)
 
     def on_time_step(self, event):
         pop = self.population_view.get(event.index)
+        if self.plot_type == 'cluster':
+            pop['color'] = pop.cluster.map(color_map)
+        elif self.plot_type == 'infection':
+            pop['color'] = pop.infected.map(color_map)
+        else:
+            raise AssertionError(f'{self.plot_type} not recognized')
 
         plt.clf()
         self.plot_boids(pop)
@@ -132,7 +144,7 @@ class MovieWriter:
         self.moviewriter.grab_frame()
 
     def plot_boids(self, pop):
-        #         plt.figure(figsize=[12, 12])
+        plt.figure(figsize=[12, 12])
         plt.scatter(pop.x, pop.y, color=pop.color)
         plt.quiver(pop.x, pop.y, pop.vx, pop.vy, color=pop.color, width=0.002)
         plt.xlabel('x')
