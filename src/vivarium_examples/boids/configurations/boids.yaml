@@ -1,0 +1,43 @@
+plugins:
+        required:
+                clock:
+                        controller: 'vivarium.framework.time.SimpleClock'
+                        builder_interface: 'vivarium.framework.time.TimeInterface'
+
+components:
+#        vivarium_examples.boids.population:
+#                - Population()
+        vivarium_examples.boids.location:
+                - Location()
+        vivarium_examples.boids.flock:
+                - FlockKMeans()
+        vivarium_examples.boids.infection:
+                - Infection()
+        vivarium_examples.boids.visualization:
+                - SaveFrames('test4')
+
+configuration:
+        population:
+                population_size: 100
+        time:
+                start: 0
+                end: 10
+        location:
+                max_velocity: 20
+                width: 1000
+                height: 1000
+        flock:
+                n_clusters: 8
+        infection:
+                n_start: 1
+
+#        time:
+#                start:
+#                        year: 2010
+#                        month: 6
+#                        day: 1
+#                end:
+#                        year: 2010
+#                        month: 6
+#                        day: 10
+#                step_size: 1  # Days
