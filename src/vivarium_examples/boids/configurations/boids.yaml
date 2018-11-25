@@ -30,6 +30,8 @@ configuration:
                 n_clusters: 8
         infection:
                 n_start: 1
+#        output_data:
+#                results_directory: "ADD ME?"
 
 #        time:
 #                start:
