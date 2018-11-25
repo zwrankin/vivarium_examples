@@ -3,7 +3,9 @@ import pandas as pd
 from scipy import spatial
 from sklearn.cluster import KMeans
 
+
 class Flock:
+    """Component to make flocking behavior based on location and velocity of boids within set radius"""
 
     configuration_defaults = {
         'flock': {
@@ -44,6 +46,12 @@ class Flock:
 
 
 class FlockKMeans:
+    """
+    Component to make flocking behavior based on location and velocity of boids of the cluster
+    Clusters are determined using sklearn.cluster.Kmeans with n_clusters
+    Note that cluster labels themselves are arbitrary and have no memory across time steps
+    """
+
     configuration_defaults = {
         'flock': {
             'n_clusters': 8

@@ -3,6 +3,10 @@ import pandas as pd
 
 
 class Location:
+    """
+    Component to initialize boid location and velocity, and update on each time step.
+    Includes hacky way of bouncing off walls
+    """
     configuration_defaults = {
         'location': {
             'max_velocity': 20,

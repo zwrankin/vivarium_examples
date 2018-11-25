@@ -25,13 +25,16 @@ color_map = {0: 'black', 1: 'red', 2: 'blue', 3: 'yellow', 4: 'green', 5: 'brown
 
 class SaveFrames:
     """
-    Save one frame per step, that can then be assembled into GIF
-    This is a hack because MovieWriter doesn't seem to work on Windows
-    :param fname: the repo within which frames will be saved
+    Save one frame per step, that is assembled into GIF at simulation_end
+    NOTE - it seems that the simulation_end event doesn't fire during interactive runs, in which case
+    you must manually knit after simulation
+
+    This component is a hacky way to get around the bugs I'm having with MovieWriter (e.g. it doesn't work on Windows)
+    :param fname: repo within which frames and gif will be saved (e.g. 'test' will save '/output/test/movie.gif')
     :param plot_type: whether to plot color as cluster or infection
     """
 
-    def __init__(self, fname, plot_type='infection'):
+    def __init__(self, fname='test', plot_type='infection'):
         self.fname = fname
         self.plot_type = plot_type
         self.step = 1

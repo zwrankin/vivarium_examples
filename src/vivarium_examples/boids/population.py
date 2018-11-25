@@ -3,10 +3,10 @@ import pandas as pd
 
 
 class Population:
+    """A mostly useless component that gives attributes to the population"""
 
     configuration_defaults = {
         'population': {
-            # 'population_size': 100,  # there's a conflict with vivarium.framework.population
             'colors': ['red', 'blue'],
         }
     }
